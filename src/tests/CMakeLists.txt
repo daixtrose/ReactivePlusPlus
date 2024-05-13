@@ -20,7 +20,11 @@ macro(add_test_target target_name module files)
   add_test_with_coverage(${TARGET})
 
   if (${module} STREQUAL rppqt)
-    rpp_add_qt_support_to_executable(${TARGET})
+  rpp_add_qt_support_to_executable(${TARGET})
+  endif()
+
+  if (${module} STREQUAL rppgrpc)
+    rpp_add_proto_files(${TARGET} rppgrpc/proto.proto)
   endif()
 
   if(MSVC)
@@ -46,4 +50,8 @@ rpp_register_tests(rpp)
 
 if (RPP_BUILD_QT_CODE)
   rpp_register_tests(rppqt)
+endif()
+
+if (RPP_BUILD_GRPC_CODE)
+  rpp_register_tests(rppgrpc)
 endif()
