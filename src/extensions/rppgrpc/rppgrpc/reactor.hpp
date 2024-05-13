@@ -105,6 +105,58 @@ namespace rppgrpc::details
         std::mutex        m_write_mutex{};
         std::deque<Input> m_write{};
     };
+
+    template<rpp::constraint::observer Observer>
+    class read_reactor final : public grpc::ClientReadReactor<rpp::utils::extract_observer_type_t<Observer>>
+    {
+        using Output = rpp::utils::extract_observer_type_t<Observer>;
+        using Base   = grpc::ClientReadReactor<Output>;
+
+    public:
+        template<rpp::constraint::decayed_same_as<Observer> TObserver>
+            requires (!rpp::constraint::decayed_same_as<TObserver, read_reactor<Observer>>)
+        explicit read_reactor(TObserver&& events)
+            : m_observer{std::forward<TObserver>(events)}
+        {
+        }
+
+        read_reactor(read_reactor&&) = delete;
+
+        void Init()
+        {
+            Base::StartCall();
+            Base::StartRead(&m_read);
+        }
+
+    private:
+        void OnReadDone(bool ok) override
+        {
+            if (!ok)
+            {
+                m_observer.on_error(std::make_exception_ptr(rppgrpc::utils::on_read_done_not_ok{"OnReadDone is not ok"}));
+                Destroy();
+                return;
+            }
+            m_observer.on_next(m_read);
+            Base::StartRead(&m_read);
+        }
+
+        void OnDone(const grpc::Status&) override
+        {
+            m_observer.on_completed();
+            Destroy();
+        }
+
+    private:
+        void Destroy()
+        {
+            delete this;
+        }
+
+    private:
+        Observer m_observer;
+        Output   m_read{};
+    };
 } // namespace rppgrpc::details
 namespace rppgrpc
 {
@@ -112,14 +164,30 @@ namespace rppgrpc
              std::derived_from<AsyncInMethod> Async,
              rpp::constraint::observable      Observable,
              rpp::constraint::observer        Observer>
-    void add_reactor(grpc::ClientContext*                                     context,
-                     Async&                                                   async,
-                     member_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                        inputs,
-                     Observer&&                                               outputs)
+    void add_reactor(grpc::ClientContext*                                          context,
+                     Async&                                                        async,
+                     member_bidi_function_ptr<AsyncInMethod, Observable, Observer> method,
+                     const Observable&                                             inputs,
+                     Observer&&                                                    outputs)
     {
         const auto reactor = new details::bidi_reactor<rpp::utils::extract_observable_type_t<Observable>, std::decay_t<Observer>>(inputs, std::forward<Observer>(outputs));
         (async.*method)(context, reactor);
+        reactor->Init();
+    }
+
+
+    template<typename AsyncInMethod,
+             std::derived_from<AsyncInMethod> Async,
+             typename Input,
+             rpp::constraint::observer Observer>
+    void add_reactor(grpc::ClientContext*                                     context,
+                     Async&                                                   async,
+                     const Input*                                             input,
+                     member_read_function_ptr<AsyncInMethod, Input, Observer> method,
+                     Observer&&                                               outputs)
+    {
+        const auto reactor = new details::read_reactor<std::decay_t<Observer>>(std::forward<Observer>(outputs));
+        (async.*method)(context, input, reactor);
         reactor->Init();
     }
 } // namespace rppgrpc
