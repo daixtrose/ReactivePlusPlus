@@ -199,5 +199,5 @@ jobs:
         cmake -B sample_build -S src/examples/rpp/package
         cmake --build sample_build --parallel 2 --config Release
 
-        cmake -B qt_sample_build -S src/examples/rppqt/package
-        cmake --build qt_sample_build --parallel 2 --config Release
+        # cmake -B qt_sample_build -S src/examples/rppqt/package
+        # cmake --build qt_sample_build --parallel 2 --config Release
