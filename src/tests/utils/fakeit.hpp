@@ -194,7 +194,7 @@ namespace fakeit
     template<typename C>
     struct MockObject
     {
-        virtual ~MockObject() FAKEIT_THROWS{};
+        virtual ~MockObject() FAKEIT_THROWS {};
 
         virtual C& get() = 0;
 
@@ -1361,7 +1361,7 @@ namespace fakeit
 
     struct VerificationException : public std::exception
     {
-        virtual ~VerificationException() FAKEIT_NO_THROWS{};
+        virtual ~VerificationException() FAKEIT_NO_THROWS {};
 
         VerificationException(std::string format)
             : _format(format)
@@ -11594,7 +11594,7 @@ namespace fakeit
 
         public:
             Terminator(smart_ptr<SequenceVerificationExpectation> expectationPtr)
-                : _expectationPtr(expectationPtr){};
+                : _expectationPtr(expectationPtr) {};
 
             operator bool()
             {
@@ -11605,7 +11605,7 @@ namespace fakeit
         };
 
     public:
-        ~SequenceVerificationProgress() FAKEIT_THROWS{};
+        ~SequenceVerificationProgress() FAKEIT_THROWS {};
 
         operator bool() const
         {
@@ -11889,7 +11889,7 @@ namespace fakeit
         }
 
     public:
-        ~VerifyNoOtherInvocationsVerificationProgress() FAKEIT_THROWS{};
+        ~VerifyNoOtherInvocationsVerificationProgress() FAKEIT_THROWS {};
 
         VerifyNoOtherInvocationsVerificationProgress setFileInfo(const char* file, int line, const char* callingMethod)
         {
