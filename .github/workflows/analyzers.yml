@@ -46,13 +46,9 @@ jobs:
           path: |
             ~/.conan2
             /Users/runner/.conan2/
-<<<<<<< feature/grpc
-          key: conan-2-ci-ubuntu-clang-Release
-=======
           key: deps-ci-ubuntu-clang-Release
->>>>>>> v2
 
-    - name: run conan
+    - name: conan detect profile
       run: |
         conan profile detect --force
 
@@ -132,13 +128,9 @@ jobs:
           path: |
             ~/.conan2
             /Users/runner/.conan2/
-<<<<<<< feature/grpc
-          key: conan-2-ci-ubuntu-clang-Release
-=======
           key: deps-ci-ubuntu-clang-Release
->>>>>>> v2
 
-    - name: run conan
+    - name: conan detect profile
       run: |
         conan profile detect --force
 
