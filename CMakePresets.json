@@ -142,7 +142,7 @@
       "name" : "build-grpc",
       "hidden": true,
       "cacheVariables": {
-        "RPP_BUILD_GRPC_CODE" : "ON"
+        "RPP_BUILD_GRPC_CODE" : "OFF"
       }
     },
     {
