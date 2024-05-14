@@ -46,7 +46,7 @@ jobs:
           path: |
             ~/.conan2
             /Users/runner/.conan2/
-          key: ${{ runner.os }}-conan-2-Release
+          key: conan-2-ci-ubuntu-clang-Release
 
 
     # Work around https://github.com/actions/runner-images/issues/8659
@@ -127,7 +127,7 @@ jobs:
           path: |
             ~/.conan2
             /Users/runner/.conan2/
-          key: ${{ runner.os }}-conan-2-${{ matrix.build_type.config }}
+          key: conan-2-${{ matrix.config.name }}-${{ matrix.build_type.config }}
 
     - name: Run CMake
       uses: lukka/run-cmake@v10
