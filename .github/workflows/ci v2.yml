@@ -21,7 +21,6 @@ jobs:
     name: Sanitize - ${{ matrix.sanitizer }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [tests]
 
     steps:
     - uses: haya14busa/action-workflow_run-status@v1
@@ -82,7 +81,7 @@ jobs:
         type: [tests, benchmarks]
         build_type: [{config: Release, test_preset: ci-tests}, {config: Debug, test_preset: ci-tests-debug}]
 
-    timeout-minutes: 120
+    timeout-minutes: 20
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.type }} ${{ matrix.config.name }} ${{ matrix.build_type.config }}
 
@@ -192,11 +191,9 @@ jobs:
         destination_dir: v2/docs
 
   use_rpp_as_package:
-<<<<<<< feature/grpc
-=======
     if: github.repository_owner == 'victimsnino' && github.event.workflow_run.conclusion == 'success'
     timeout-minutes: 20
->>>>>>> v2
+
     runs-on: ubuntu-latest
     name: Test RPP as package - ubuntu-latest
 
