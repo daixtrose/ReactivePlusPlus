@@ -36,6 +36,10 @@ jobs:
     - name: get conan
       uses: turtlebrowser/get-conan@main
 
+    - name: conan detect profile
+      run: |
+        conan profile detect --force
+
     - name: cache conan
       uses: actions/cache@v2
       with:
@@ -43,6 +47,7 @@ jobs:
             ~/.conan2
             /Users/runner/.conan2/
           key: ${{ runner.os }}-conan-2-Release
+    
 
     # Work around https://github.com/actions/runner-images/issues/8659
     - name: "Remove GCC 13 from runner image (workaround)"
@@ -111,6 +116,10 @@ jobs:
 
     - name: get conan
       uses: turtlebrowser/get-conan@main
+
+    - name: conan detect profile
+      run: |
+        conan profile detect --force
 
     - name: cache conan
       uses: actions/cache@v2
