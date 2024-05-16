@@ -51,34 +51,33 @@ if (RPP_BUILD_GRPC_CODE AND (RPP_BUILD_TESTS OR RPP_BUILD_EXAMPLES))
   rpp_handle_3rdparty(gRPC::grpc++)
   rpp_handle_3rdparty(protobuf::protobuf)
 
-  macro(rpp_add_proto_files TARGET FILES)
-    add_library(${TARGET}_proto STATIC ${FILES})
+  macro(rpp_add_proto_target TARGET FILES)
+    add_library(${TARGET} STATIC ${FILES})
 
-    target_link_libraries(${TARGET}_proto
+    target_link_libraries(${TARGET}
         PUBLIC
             gRPC::grpc++
             protobuf::libprotobuf
             ${grpc_LIBRARIES_TARGETS}
     )
 
-    target_include_directories(${TARGET}_proto PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+    target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
     get_target_property(grpc_cpp_plugin_location gRPC::grpc_cpp_plugin LOCATION )
-    protobuf_generate(TARGET ${TARGET}_proto OUT_VAR PROTO_FILES LANGUAGE cpp )
+    protobuf_generate(TARGET ${TARGET} OUT_VAR PROTO_FILES LANGUAGE cpp )
 
     protobuf_generate(
-        TARGET ${TARGET}_proto
+        TARGET ${TARGET}
         LANGUAGE grpc
         OUT_VAR GRPC_PROTO_FILES
         # PROTOC_OUT_DIR "${PROTO_BINARY_DIR}"
         PLUGIN protoc-gen-grpc=${grpc_cpp_plugin_location}
         GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc)
 
-    target_link_libraries(${TARGET} PRIVATE ${TARGET}_proto)
 
-    set_target_properties(${TARGET}_proto PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${TARGET}_proto,INTERFACE_INCLUDE_DIRECTORIES>)
-    set_target_properties(${TARGET}_proto PROPERTIES CXX_CLANG_TIDY "")
-    set_target_properties(${TARGET}_proto PROPERTIES CXX_CPPCHECK "")
+    set_target_properties(${TARGET} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${TARGET},INTERFACE_INCLUDE_DIRECTORIES>)
+    set_target_properties(${TARGET} PROPERTIES CXX_CLANG_TIDY "")
+    set_target_properties(${TARGET} PROPERTIES CXX_CPPCHECK "")
   endmacro()
 endif()
 

@@ -109,6 +109,11 @@ TEST_CASE("async client can be casted to rppgrpc")
         validate_write(stream_mock, reactor);
         validate_read(stream_mock, reactor);
 
+        if (reactor)
+        {
+            reactor->OnDone(grpc::Status::OK);
+        }
+
         fakeit::VerifyNoOtherInvocations(stream_mock);
     }
     SECTION("server-side")
@@ -136,6 +141,10 @@ TEST_CASE("async client can be casted to rppgrpc")
 
         validate_read(stream_mock, reactor);
 
+        if (reactor)
+        {
+            reactor->OnDone(grpc::Status::OK);
+        }
         fakeit::VerifyNoOtherInvocations(stream_mock);
     }
     SECTION("client-side")
@@ -171,8 +180,13 @@ TEST_CASE("async client can be casted to rppgrpc")
 
             CHECK(mock.get_total_on_next_count() == 0);
             reactor->OnDone(grpc::Status::OK);
+            reactor = nullptr;
 
             CHECK(mock.get_received_values() == std::vector<uint32_t>{30});
+        }
+        if (reactor)
+        {
+            reactor->OnDone(grpc::Status::OK);
         }
         fakeit::VerifyNoOtherInvocations(stream_mock);
     }
