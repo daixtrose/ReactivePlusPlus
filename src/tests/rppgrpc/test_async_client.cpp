@@ -149,18 +149,31 @@ TEST_CASE("async client can be casted to rppgrpc")
 
         fakeit::When(Method(stub_mock, ClientSide)).AlwaysDo([&ctx, &stream_mock, &reactor, &resp](::grpc::ClientContext* context, Output* o, ::grpc::ClientWriteReactor<::Input>* r) {
             reactor = r;
-            CHECK(resp == o);
+            resp    = o;
             CHECK(context == &ctx);
             stream_mock.get().BindReactor(reactor);
         });
 
-        rppgrpc::add_reactor(&ctx, stub_mock.get(), &TestService::StubInterface::async_interface::Bidirectional, subj.get_observable(), out_subj.get_observer());
+        rppgrpc::add_reactor(&ctx, stub_mock.get(), &TestService::StubInterface::async_interface::ClientSide, subj.get_observable(), out_subj.get_observer());
         fakeit::Verify(Method(stub_mock, ClientSide)).Once();
 
         fakeit::Verify(Method(stream_mock, StartCall)).Once();
 
         validate_write(stream_mock, reactor);
 
+        SECTION("get response")
+        {
+            CHECK(resp);
+            resp->set_value(30);
+
+            subj.get_observer().on_completed();
+            fakeit::Verify(Method(stream_mock, WritesDone)).Once();
+
+            CHECK(mock.get_total_on_next_count() == 0);
+            reactor->OnDone(grpc::Status::OK);
+
+            CHECK(mock.get_received_values() == std::vector<uint32_t>{30});
+        }
         fakeit::VerifyNoOtherInvocations(stream_mock);
     }
     fakeit::VerifyNoOtherInvocations(stub_mock);

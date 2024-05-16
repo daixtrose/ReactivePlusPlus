@@ -14,12 +14,9 @@
 
 namespace rppgrpc::utils
 {
-    struct on_read_done_not_ok : public std::runtime_error
+    struct reactor_faield : public std::runtime_error
     {
         using std::runtime_error::runtime_error;
     };
-    struct on_write_done_not_ok : public std::runtime_error
-    {
-        using std::runtime_error::runtime_error;
-    };
+
 } // namespace rppgrpc::utils
