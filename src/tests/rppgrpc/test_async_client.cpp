@@ -39,7 +39,7 @@ TEST_CASE("async client can be casted to rppgrpc")
     out_subj.get_observable() | rpp::ops::map([](const Output& out) { return out.value(); }) | rpp::ops::subscribe(mock);
 
 
-    auto validate_write = [&subj, &mock](auto& stream_mock, auto* reactor) {
+    auto validate_write = [&subj, &mock](auto& stream_mock, auto*& reactor) {
         SECTION("write to stream")
         {
             for (auto v : {10, 3, 15, 20})
@@ -56,11 +56,12 @@ TEST_CASE("async client can be casted to rppgrpc")
         {
             CHECK(mock.get_on_error_count() == 0);
             reactor->OnWriteDone(false);
+            reactor = nullptr;
             CHECK(mock.get_on_error_count() == 1);
         }
     };
 
-    auto validate_read = [&mock, &resp](auto& stream_mock, auto* reactor) {
+    auto validate_read = [&mock, &resp](auto& stream_mock, auto*& reactor) {
         SECTION("read from stream")
         {
             std::vector<uint32_t> expected_values{};
@@ -80,6 +81,7 @@ TEST_CASE("async client can be casted to rppgrpc")
         {
             CHECK(mock.get_on_error_count() == 0);
             reactor->OnReadDone(false);
+            reactor = nullptr;
             CHECK(mock.get_on_error_count() == 1);
         }
     };
