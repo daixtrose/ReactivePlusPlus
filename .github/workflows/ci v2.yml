@@ -70,7 +70,7 @@ jobs:
       uses: lukka/run-cmake@v10
       with:
         configurePreset: ${{ matrix.config.name }}-tests
-        configurePresetAdditionalArgs: "['-DCMAKE_BUILD_TYPE=${{ matrix.build_type.config }}']"
+        configurePresetAdditionalArgs: "['-DCMAKE_BUILD_TYPE=${{ matrix.build_type.config }}', '-DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type.config }}']"
 
   sanitize:
     needs: ["cache_deps"]
@@ -198,7 +198,7 @@ jobs:
       uses: lukka/run-cmake@v10
       with:
         configurePreset: ${{ matrix.config.name }}-${{ matrix.type }}
-        configurePresetAdditionalArgs: "['-DCMAKE_BUILD_TYPE=${{ matrix.build_type.config }}']"
+        configurePresetAdditionalArgs: "['-DCMAKE_BUILD_TYPE=${{ matrix.build_type.config }}', '-DCMAKE_CONFIGURATION_TYPES=${{ matrix.build_type.config }}']"
         buildPreset: ci-build
         buildPresetAdditionalArgs: "['--config ${{ matrix.build_type.config }}']"
         testPreset: ${{matrix.build_type.test_preset}}
