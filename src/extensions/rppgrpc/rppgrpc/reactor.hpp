@@ -109,8 +109,8 @@ namespace rppgrpc::details
 
         Output m_read{};
 
-        std::mutex        m_write_mutex{};
-        std::deque<Input> m_write{};
+        std::mutex       m_write_mutex{};
+        std::list<Input> m_write{};
     };
 
     template<rpp::constraint::decayed_type Input, rpp::constraint::observer Observer>
