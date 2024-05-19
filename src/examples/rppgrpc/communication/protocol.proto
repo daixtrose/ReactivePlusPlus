@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+message Input {
+    string Value = 1;
+}
+
+message Output {
+    string Value = 1;
+}
+
+service TestService {
+    rpc Simple(Input) returns (Output) {}
+    rpc ServerSide(Input) returns (stream Output) {}
+    rpc ClientSide(stream Input) returns (Output) {}
+    rpc Bidirectional(stream Input) returns (stream Output) {}
+}
