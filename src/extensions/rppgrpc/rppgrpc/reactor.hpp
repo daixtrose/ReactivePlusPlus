@@ -18,7 +18,7 @@
 #include <rppgrpc/fwd.hpp>
 #include <rppgrpc/utils/exceptions.hpp>
 
-#include <deque>
+#include <list>
 
 namespace rppgrpc::details
 {
