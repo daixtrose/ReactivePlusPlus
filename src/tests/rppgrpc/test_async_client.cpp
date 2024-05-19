@@ -42,9 +42,9 @@ TEST_CASE("async client can be casted to rppgrpc")
     auto validate_write = [&subj, &mock](auto& stream_mock, auto*& reactor) {
         SECTION("write to stream")
         {
+            Request message{};
             for (auto v : {10, 3, 15, 20})
             {
-                Request message{};
                 message.set_value(v);
 
                 subj.get_observer().on_next(message);
