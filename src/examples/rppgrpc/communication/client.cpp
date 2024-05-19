@@ -11,7 +11,8 @@ int main()
 {
     auto stub = TestService::NewStub(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
 
-    grpc::ClientContext ctx{};
+    grpc::ClientContext               ctx{};
+    rpp::composite_disposable_wrapper d{};
     rppgrpc::add_reactor(&ctx,
                          *stub->async(),
                          &TestService::StubInterface::async_interface::Bidirectional,
@@ -21,10 +22,17 @@ int main()
                              | rpp::ops::subscribe_on(rpp::schedulers::new_thread{})
                              | rpp::ops::map([](char v) {
                                    Input i{};
-                                   i.set_value(v);
+                                   i.set_value(std::to_string(v));
                                    return i;
                                }),
-                         rpp::make_lambda_observer([](const Output& v) {
+                         rpp::make_lambda_observer(d, [](const Output& v) {
                              std::cout << v.value() << std::endl;
                          }));
+
+
+    while (!d.is_disposed())
+    {
+    }
+
+    return 0;
 }
