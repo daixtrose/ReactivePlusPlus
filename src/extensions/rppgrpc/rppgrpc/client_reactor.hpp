@@ -22,17 +22,17 @@
 
 namespace rppgrpc::details
 {
-    template<rpp::constraint::decayed_type Input, rpp::constraint::observer Observer>
-    class bidi_reactor final : public grpc::ClientBidiReactor<Input, rpp::utils::extract_observer_type_t<Observer>>
+    template<rpp::constraint::decayed_type Request, rpp::constraint::observer Observer>
+    class bidi_reactor final : public grpc::ClientBidiReactor<Request, rpp::utils::extract_observer_type_t<Observer>>
     {
-        using Output = rpp::utils::extract_observer_type_t<Observer>;
-        using Base   = grpc::ClientBidiReactor<Input, Output>;
+        using Response = rpp::utils::extract_observer_type_t<Observer>;
+        using Base     = grpc::ClientBidiReactor<Request, Response>;
 
     public:
-        template<rpp::constraint::observable_of_type<Input> Observable, rpp::constraint::decayed_same_as<Observer> TObserver>
+        template<rpp::constraint::observable_of_type<Request> Observable, rpp::constraint::decayed_same_as<Observer> TObserver>
         bidi_reactor(const Observable& messages, TObserver&& events)
             : m_observer{std::forward<TObserver>(events)}
-            , m_disposable{messages.subscribe_with_disposable([this]<rpp::constraint::decayed_same_as<Input> T>(T&& message) {
+            , m_disposable{messages.subscribe_with_disposable([this]<rpp::constraint::decayed_same_as<Request> T>(T&& message) {
                 std::lock_guard lock{m_write_mutex};
                 m_write.push_back(std::forward<T>(message));
                 if (m_write.size() == 1)
@@ -48,8 +48,8 @@ namespace rppgrpc::details
 
         void Init()
         {
-            Base::StartCall();
             Base::StartRead(&m_read);
+            Base::StartCall();
         }
 
     private:
@@ -107,23 +107,23 @@ namespace rppgrpc::details
         Observer                m_observer;
         rpp::disposable_wrapper m_disposable;
 
-        Output m_read{};
+        Response m_read{};
 
-        std::mutex       m_write_mutex{};
-        std::list<Input> m_write{};
+        std::mutex         m_write_mutex{};
+        std::list<Request> m_write{};
     };
 
-    template<rpp::constraint::decayed_type Input, rpp::constraint::observer Observer>
-    class write_reactor final : public grpc::ClientWriteReactor<Input>
+    template<rpp::constraint::decayed_type Request, rpp::constraint::observer Observer>
+    class write_reactor final : public grpc::ClientWriteReactor<Request>
     {
-        using Output = rpp::utils::extract_observer_type_t<Observer>;
-        using Base   = grpc::ClientWriteReactor<Input>;
+        using Response = rpp::utils::extract_observer_type_t<Observer>;
+        using Base     = grpc::ClientWriteReactor<Request>;
 
     public:
-        template<rpp::constraint::observable_of_type<Input> Observable, rpp::constraint::decayed_same_as<Observer> TObserver>
-        write_reactor(const Observable& messages, TObserver&& events, Output*& ptr_to_write_output)
+        template<rpp::constraint::observable_of_type<Request> Observable, rpp::constraint::decayed_same_as<Observer> TObserver>
+        write_reactor(const Observable& messages, TObserver&& events, Response*& ptr_to_write_response)
             : m_observer{std::forward<TObserver>(events)}
-            , m_disposable{messages.subscribe_with_disposable([this]<rpp::constraint::decayed_same_as<Input> T>(T&& message) {
+            , m_disposable{messages.subscribe_with_disposable([this]<rpp::constraint::decayed_same_as<Request> T>(T&& message) {
                 std::lock_guard lock{m_write_mutex};
                 m_write.push_back(std::forward<T>(message));
                 if (m_write.size() == 1)
@@ -135,7 +135,7 @@ namespace rppgrpc::details
                                                                   Base::StartWritesDone();
                                                               })}
         {
-            ptr_to_write_output = &m_read;
+            ptr_to_write_response = &m_read;
         }
 
         void Init()
@@ -187,17 +187,17 @@ namespace rppgrpc::details
         Observer                m_observer;
         rpp::disposable_wrapper m_disposable;
 
-        Output m_read{};
+        Response m_read{};
 
-        std::mutex        m_write_mutex{};
-        std::deque<Input> m_write{};
+        std::mutex         m_write_mutex{};
+        std::list<Request> m_write{};
     };
 
     template<rpp::constraint::observer Observer>
     class read_reactor final : public grpc::ClientReadReactor<rpp::utils::extract_observer_type_t<Observer>>
     {
-        using Output = rpp::utils::extract_observer_type_t<Observer>;
-        using Base   = grpc::ClientReadReactor<Output>;
+        using Response = rpp::utils::extract_observer_type_t<Observer>;
+        using Base     = grpc::ClientReadReactor<Response>;
 
     public:
         template<rpp::constraint::decayed_same_as<Observer> TObserver>
@@ -249,7 +249,7 @@ namespace rppgrpc::details
 
     private:
         Observer m_observer;
-        Output   m_read{};
+        Response m_read{};
     };
 } // namespace rppgrpc::details
 namespace rppgrpc
@@ -261,10 +261,10 @@ namespace rppgrpc
     void add_reactor(grpc::ClientContext*                                          context,
                      Async&                                                        async,
                      member_bidi_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                             inputs,
-                     Observer&&                                                    outputs)
+                     const Observable&                                             requests,
+                     Observer&&                                                    responses)
     {
-        const auto reactor = new details::bidi_reactor<rpp::utils::extract_observable_type_t<Observable>, std::decay_t<Observer>>(inputs, std::forward<Observer>(outputs));
+        const auto reactor = new details::bidi_reactor<rpp::utils::extract_observable_type_t<Observable>, std::decay_t<Observer>>(requests, std::forward<Observer>(responses));
         (async.*method)(context, reactor);
         reactor->Init();
     }
@@ -272,16 +272,16 @@ namespace rppgrpc
 
     template<typename AsyncInMethod,
              std::derived_from<AsyncInMethod> Async,
-             typename Input,
+             typename Request,
              rpp::constraint::observer Observer>
-    void add_reactor(grpc::ClientContext*                                     context,
-                     Async&                                                   async,
-                     const Input*                                             input,
-                     member_read_function_ptr<AsyncInMethod, Input, Observer> method,
-                     Observer&&                                               outputs)
+    void add_reactor(grpc::ClientContext*                                       context,
+                     Async&                                                     async,
+                     const Request*                                             request,
+                     member_read_function_ptr<AsyncInMethod, Request, Observer> method,
+                     Observer&&                                                 responses)
     {
-        const auto reactor = new details::read_reactor<std::decay_t<Observer>>(std::forward<Observer>(outputs));
-        (async.*method)(context, input, reactor);
+        const auto reactor = new details::read_reactor<std::decay_t<Observer>>(std::forward<Observer>(responses));
+        (async.*method)(context, request, reactor);
         reactor->Init();
     }
 
@@ -292,12 +292,12 @@ namespace rppgrpc
     void add_reactor(grpc::ClientContext*                                           context,
                      Async&                                                         async,
                      member_write_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                              inputs,
-                     Observer&&                                                     outputs)
+                     const Observable&                                              requests,
+                     Observer&&                                                     responses)
     {
-        rpp::utils::extract_observer_type_t<Observer>* output{};
-        const auto                                     reactor = new details::write_reactor<rpp::utils::extract_observable_type_t<Observable>, std::decay_t<Observer>>(inputs, std::forward<Observer>(outputs), output);
-        (async.*method)(context, output, reactor);
+        rpp::utils::extract_observer_type_t<Observer>* response{};
+        const auto                                     reactor = new details::write_reactor<rpp::utils::extract_observable_type_t<Observable>, std::decay_t<Observer>>(requests, std::forward<Observer>(responses), response);
+        (async.*method)(context, response, reactor);
         reactor->Init();
     }
 } // namespace rppgrpc

@@ -1,16 +1,16 @@
 syntax = "proto3";
 
-message Input {
+message Request {
     string Value = 1;
 }
 
-message Output {
+message Response {
     string Value = 1;
 }
 
 service TestService {
-    rpc Simple(Input) returns (Output) {}
-    rpc ServerSide(Input) returns (stream Output) {}
-    rpc ClientSide(stream Input) returns (Output) {}
-    rpc Bidirectional(stream Input) returns (stream Output) {}
+    rpc Simple(Request) returns (Response) {}
+    rpc ServerSide(Request) returns (stream Response) {}
+    rpc ClientSide(stream Request) returns (Response) {}
+    rpc Bidirectional(stream Request) returns (stream Response) {}
 }

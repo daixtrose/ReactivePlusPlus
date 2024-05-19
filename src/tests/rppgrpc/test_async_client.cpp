@@ -10,33 +10,33 @@
 
 #include "fakeit.hpp"
 
-struct ClientCallbackReaderWriter : public grpc::ClientCallbackReaderWriter<Input, Output>
+struct ClientCallbackReaderWriter : public grpc::ClientCallbackReaderWriter<Request, Response>
 {
-    using grpc::ClientCallbackReaderWriter<Input, Output>::BindReactor;
+    using grpc::ClientCallbackReaderWriter<Request, Response>::BindReactor;
 };
 
-struct ClientCallbackReader : public grpc::ClientCallbackReader<Output>
+struct ClientCallbackReader : public grpc::ClientCallbackReader<Response>
 {
-    using grpc::ClientCallbackReader<Output>::BindReactor;
+    using grpc::ClientCallbackReader<Response>::BindReactor;
 };
 
-struct ClientCallbackWriter : public grpc::ClientCallbackWriter<Input>
+struct ClientCallbackWriter : public grpc::ClientCallbackWriter<Request>
 {
-    using grpc::ClientCallbackWriter<Input>::BindReactor;
+    using grpc::ClientCallbackWriter<Request>::BindReactor;
 };
 
 TEST_CASE("async client can be casted to rppgrpc")
 {
     grpc::ClientContext ctx{};
-    Output*             resp{};
+    Response*           resp{};
 
-    rpp::subjects::publish_subject<Input>  subj{};
-    rpp::subjects::publish_subject<Output> out_subj{};
+    rpp::subjects::publish_subject<Request>  subj{};
+    rpp::subjects::publish_subject<Response> out_subj{};
 
 
     fakeit::Mock<TestService::StubInterface::async_interface> stub_mock{};
     mock_observer_strategy<uint32_t>                          mock{};
-    out_subj.get_observable() | rpp::ops::map([](const Output& out) { return out.value(); }) | rpp::ops::subscribe(mock);
+    out_subj.get_observable() | rpp::ops::map([](const Response& out) { return out.value(); }) | rpp::ops::subscribe(mock);
 
 
     auto validate_write = [&subj, &mock](auto& stream_mock, auto*& reactor) {
@@ -44,11 +44,11 @@ TEST_CASE("async client can be casted to rppgrpc")
         {
             for (auto v : {10, 3, 15, 20})
             {
-                Input message{};
+                Request message{};
                 message.set_value(v);
 
                 subj.get_observer().on_next(message);
-                fakeit::Verify(OverloadedMethod(stream_mock, Write, void(const Input* req, grpc::WriteOptions)).Matching([v](const Input* req, grpc::WriteOptions) -> bool { return req->value() == v; })).Once();
+                fakeit::Verify(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions)).Matching([v](const Request* req, grpc::WriteOptions) -> bool { return req->value() == v; })).Once();
                 reactor->OnWriteDone(true);
             }
         }
@@ -88,15 +88,15 @@ TEST_CASE("async client can be casted to rppgrpc")
 
     SECTION("bidirectional")
     {
-        grpc::ClientBidiReactor<::Input, ::Output>* reactor{};
+        grpc::ClientBidiReactor<::Request, ::Response>* reactor{};
 
         fakeit::Mock<ClientCallbackReaderWriter> stream_mock{};
         fakeit::Fake(Method(stream_mock, StartCall));
         fakeit::Fake(Method(stream_mock, Write));
         fakeit::Fake(Method(stream_mock, WritesDone));
-        fakeit::When(Method(stream_mock, Read)).AlwaysDo([&resp](Output* r) { resp = r; });
+        fakeit::When(Method(stream_mock, Read)).AlwaysDo([&resp](Response* r) { resp = r; });
 
-        fakeit::When(Method(stub_mock, Bidirectional)).AlwaysDo([&ctx, &stream_mock, &reactor](::grpc::ClientContext* context, ::grpc::ClientBidiReactor<::Input, ::Output>* r) {
+        fakeit::When(Method(stub_mock, Bidirectional)).AlwaysDo([&ctx, &stream_mock, &reactor](::grpc::ClientContext* context, ::grpc::ClientBidiReactor<::Request, ::Response>* r) {
             reactor = r;
             CHECK(context == &ctx);
             stream_mock.get().BindReactor(reactor);
@@ -120,17 +120,17 @@ TEST_CASE("async client can be casted to rppgrpc")
     }
     SECTION("server-side")
     {
-        grpc::ClientReadReactor<Output>* reactor{};
+        grpc::ClientReadReactor<Response>* reactor{};
 
         fakeit::Mock<ClientCallbackReader> stream_mock{};
         fakeit::Fake(Method(stream_mock, StartCall));
-        fakeit::When(Method(stream_mock, Read)).AlwaysDo([&resp](Output* r) { resp = r; });
+        fakeit::When(Method(stream_mock, Read)).AlwaysDo([&resp](Response* r) { resp = r; });
 
-        Input message{};
+        Request message{};
 
-        fakeit::When(Method(stub_mock, ServerSide)).AlwaysDo([&ctx, &stream_mock, &reactor, &message](::grpc::ClientContext* context, const Input* input, ::grpc::ClientReadReactor<::Output>* r) {
+        fakeit::When(Method(stub_mock, ServerSide)).AlwaysDo([&ctx, &stream_mock, &reactor, &message](::grpc::ClientContext* context, const Request* request, ::grpc::ClientReadReactor<::Response>* r) {
             reactor = r;
-            CHECK(input == &message);
+            CHECK(request == &message);
             CHECK(context == &ctx);
             stream_mock.get().BindReactor(reactor);
         });
@@ -151,14 +151,14 @@ TEST_CASE("async client can be casted to rppgrpc")
     }
     SECTION("client-side")
     {
-        grpc::ClientWriteReactor<::Input>* reactor{};
+        grpc::ClientWriteReactor<::Request>* reactor{};
 
         fakeit::Mock<ClientCallbackWriter> stream_mock{};
         fakeit::Fake(Method(stream_mock, StartCall));
-        fakeit::Fake(OverloadedMethod(stream_mock, Write, void(const Input* req, grpc::WriteOptions options)));
+        fakeit::Fake(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions options)));
         fakeit::Fake(Method(stream_mock, WritesDone));
 
-        fakeit::When(Method(stub_mock, ClientSide)).AlwaysDo([&ctx, &stream_mock, &reactor, &resp](::grpc::ClientContext* context, Output* o, ::grpc::ClientWriteReactor<::Input>* r) {
+        fakeit::When(Method(stub_mock, ClientSide)).AlwaysDo([&ctx, &stream_mock, &reactor, &resp](::grpc::ClientContext* context, Response* o, ::grpc::ClientWriteReactor<::Request>* r) {
             reactor = r;
             resp    = o;
             CHECK(context == &ctx);

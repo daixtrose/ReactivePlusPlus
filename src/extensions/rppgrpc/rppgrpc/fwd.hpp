@@ -38,8 +38,8 @@ namespace rppgrpc
     template<typename Async, rpp::constraint::observable Observable, rpp::constraint::observer Observer>
     using member_bidi_function_ptr = void (Async::*)(grpc::ClientContext*, grpc::ClientBidiReactor<rpp::utils::extract_observable_type_t<Observable>, rpp::utils::extract_observer_type_t<Observer>>*);
 
-    template<typename Async, typename Input, rpp::constraint::observer Observer>
-    using member_read_function_ptr = void (Async::*)(grpc::ClientContext*, const Input*, grpc::ClientReadReactor<rpp::utils::extract_observer_type_t<Observer>>*);
+    template<typename Async, typename Request, rpp::constraint::observer Observer>
+    using member_read_function_ptr = void (Async::*)(grpc::ClientContext*, const Request*, grpc::ClientReadReactor<rpp::utils::extract_observer_type_t<Observer>>*);
 
     template<typename Async, rpp::constraint::observable Observable, rpp::constraint::observer Observer>
     using member_write_function_ptr = void (Async::*)(grpc::ClientContext*, rpp::utils::extract_observer_type_t<Observer>*, grpc::ClientWriteReactor<rpp::utils::extract_observable_type_t<Observable>>*);
@@ -51,18 +51,18 @@ namespace rppgrpc
     void add_reactor(grpc::ClientContext*                                          context,
                      Async&                                                        async,
                      member_bidi_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                             inputs,
-                     Observer&&                                                    outputs);
+                     const Observable&                                             requests,
+                     Observer&&                                                    responses);
 
     template<typename AsyncInMethod,
              std::derived_from<AsyncInMethod> Async,
-             typename Input,
+             typename Request,
              rpp::constraint::observer Observer>
-    void add_reactor(grpc::ClientContext*                                     context,
-                     Async&                                                   async,
-                     const Input*                                             input,
-                     member_read_function_ptr<AsyncInMethod, Input, Observer> method,
-                     Observer&&                                               outputs);
+    void add_reactor(grpc::ClientContext*                                       context,
+                     Async&                                                     async,
+                     const Request*                                             request,
+                     member_read_function_ptr<AsyncInMethod, Request, Observer> method,
+                     Observer&&                                                 responses);
 
     template<typename AsyncInMethod,
              std::derived_from<AsyncInMethod> Async,
@@ -71,6 +71,6 @@ namespace rppgrpc
     void add_reactor(grpc::ClientContext*                                           context,
                      Async&                                                         async,
                      member_write_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                              inputs,
-                     Observer&&                                                     outputs);
+                     const Observable&                                              requests,
+                     Observer&&                                                     responses);
 } // namespace rppgrpc
