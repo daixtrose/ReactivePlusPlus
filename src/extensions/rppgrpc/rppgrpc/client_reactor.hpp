@@ -18,7 +18,7 @@
 #include <rppgrpc/fwd.hpp>
 #include <rppgrpc/utils/exceptions.hpp>
 
-#include <list>
+#include <deque>
 
 namespace rppgrpc::details
 {
@@ -109,8 +109,8 @@ namespace rppgrpc::details
 
         Response m_read{};
 
-        std::mutex         m_write_mutex{};
-        std::list<Request> m_write{};
+        std::mutex          m_write_mutex{};
+        std::deque<Request> m_write{};
     };
 
     template<rpp::constraint::decayed_type Request, rpp::constraint::observer Observer>

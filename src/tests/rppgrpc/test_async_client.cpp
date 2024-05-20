@@ -42,14 +42,17 @@ TEST_CASE("async client can be casted to rppgrpc")
     auto validate_write = [&subj, &mock](auto& stream_mock, auto*& reactor) {
         SECTION("write to stream")
         {
-            Request message{};
+            std::vector<Request> requests{};
             for (auto v : {10, 3, 15, 20})
             {
-                message.set_value(v);
-
-                subj.get_observer().on_next(message);
-                fakeit::Verify(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions)).Matching([v](const Request* req, grpc::WriteOptions) -> bool { return req->value() == v; })).Once();
+                requests.emplace_back().set_value(v);
+            }
+            for (const auto& r: requests) {
+                subj.get_observer().on_next(r);
                 reactor->OnWriteDone(true);
+            }
+            for (const auto& r: requests) {
+                fakeit::Verify(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions)).Matching([r](const Request* req, grpc::WriteOptions) -> bool { return req->value() == r->value(); })).Once();
             }
         }
         SECTION("write failed")

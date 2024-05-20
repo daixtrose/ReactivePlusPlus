@@ -18,7 +18,7 @@
 #include <rppgrpc/fwd.hpp>
 #include <rppgrpc/utils/exceptions.hpp>
 
-#include <list>
+#include <deque>
 
 namespace rppgrpc::details
 {
@@ -98,8 +98,8 @@ namespace rppgrpc::details
 
         Request m_read{};
 
-        std::mutex          m_write_mutex{};
-        std::list<Response> m_write{};
+        std::mutex           m_write_mutex{};
+        std::deque<Response> m_write{};
     };
 } // namespace rppgrpc::details
 namespace rppgrpc
