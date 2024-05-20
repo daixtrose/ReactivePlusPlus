@@ -31,9 +31,9 @@ int main()
         std::cout << "[BidireactionalResponse]: " << v.ShortDebugString() << std::endl;
     });
 
-    rppgrpc::add_client_reactor(&ctx[0],
+    rppgrpc::add_client_reactor(&TestService::StubInterface::async_interface::Bidirectional,
                                 *stub->async(),
-                                &TestService::StubInterface::async_interface::Bidirectional,
+                                &ctx[0],
                                 bidi_requests.get_observable()
                                     | rpp::ops::take_while([](const std::string& v) { return v != "0"; })
                                     | rpp::ops::map([](const std::string& v) {
@@ -43,9 +43,9 @@ int main()
                                       }),
                                 bidi_responses.get_observer());
 
-    rppgrpc::add_client_reactor(&ctx[1],
+    rppgrpc::add_client_reactor(&TestService::StubInterface::async_interface::ClientSide,
                                 *stub->async(),
-                                &TestService::StubInterface::async_interface::ClientSide,
+                                &ctx[1],
                                 bidi_responses.get_observable()
                                     | rpp::ops::map([](const Response& response) {
                                           Request request{};
@@ -56,9 +56,9 @@ int main()
                                     std::cout << "[ClientsideResponse]: " << v.ShortDebugString() << std::endl;
                                 }));
     Request req{};
-    rppgrpc::add_client_reactor(&ctx[2],
+    rppgrpc::add_client_reactor(&TestService::StubInterface::async_interface::ServerSide,
                                 *stub->async(),
-                                &TestService::StubInterface::async_interface::ServerSide,
+                                &ctx[2],
                                 &req,
                                 rpp::make_lambda_observer(d, [](const Response& v) {
                                     std::cout << "[ServerSideResponse]: " << v.ShortDebugString() << std::endl;
