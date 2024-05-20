@@ -47,11 +47,13 @@ TEST_CASE("async client can be casted to rppgrpc")
             {
                 requests.emplace_back().set_value(v);
             }
-            for (const auto& r: requests) {
+            for (const auto& r : requests)
+            {
                 subj.get_observer().on_next(r);
                 reactor->OnWriteDone(true);
             }
-            for (const auto& r: requests) {
+            for (const auto& r : requests)
+            {
                 fakeit::Verify(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions)).Matching([r](const Request* req, grpc::WriteOptions) -> bool { return req->value() == r->value(); })).Once();
             }
         }
