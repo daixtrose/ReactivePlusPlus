@@ -6,6 +6,7 @@ class Config(ConanFile):
 
     def requirements(self):
         self.requires("sfml/2.6.1")
+        self.requires("asio/1.30.2")
         # self.requires("grpc/1.54.3", transitive_libs=True, transitive_headers=True)
         # self.requires("protobuf/3.21.12")
         # self.requires("libmount/2.39", override=True)
