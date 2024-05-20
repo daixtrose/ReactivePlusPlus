@@ -43,19 +43,19 @@ TEST_CASE("async client can be casted to rppgrpc")
         SECTION("write to stream")
         {
             std::vector<uint32_t> actualRequests{};
-            
+
             fakeit::When(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions))).AlwaysDo([&actualRequests](const Request* req, grpc::WriteOptions) { actualRequests.push_back(req->value()); });
-            
+
             for (auto v : {10, 3, 15, 20})
             {
                 Request request{};
                 request.set_value(v);
-                
+
                 subj.get_observer().on_next(request);
                 reactor->OnWriteDone(true);
             }
             fakeit::Verify(OverloadedMethod(stream_mock, Write, void(const Request* req, grpc::WriteOptions))).Times(4);
-            CHECK(actualRequests == std::vector<uint32_t>{10,3,15,20});
+            CHECK(actualRequests == std::vector<uint32_t>{10, 3, 15, 20});
         }
         SECTION("write failed")
         {
