@@ -107,7 +107,7 @@ TEST_CASE("async client can be casted to rppgrpc")
             stream_mock.get().BindReactor(reactor);
         });
 
-        rppgrpc::add_reactor(&ctx, stub_mock.get(), &TestService::StubInterface::async_interface::Bidirectional, subj.get_observable(), out_subj.get_observer());
+        rppgrpc::add_client_reactor(&TestService::StubInterface::async_interface::Bidirectional, stub_mock.get(), &ctx, subj.get_observable(), out_subj.get_observer());
         fakeit::Verify(Method(stub_mock, Bidirectional)).Once();
 
         fakeit::Verify(Method(stream_mock, StartCall)).Once();
@@ -140,7 +140,7 @@ TEST_CASE("async client can be casted to rppgrpc")
             stream_mock.get().BindReactor(reactor);
         });
 
-        rppgrpc::add_reactor(&ctx, stub_mock.get(), &message, &TestService::StubInterface::async_interface::ServerSide, out_subj.get_observer());
+        rppgrpc::add_client_reactor(&TestService::StubInterface::async_interface::ServerSide, stub_mock.get(), &ctx, &message, out_subj.get_observer());
         fakeit::Verify(Method(stub_mock, ServerSide)).Once();
 
         fakeit::Verify(Method(stream_mock, StartCall)).Once();
@@ -170,7 +170,7 @@ TEST_CASE("async client can be casted to rppgrpc")
             stream_mock.get().BindReactor(reactor);
         });
 
-        rppgrpc::add_reactor(&ctx, stub_mock.get(), &TestService::StubInterface::async_interface::ClientSide, subj.get_observable(), out_subj.get_observer());
+        rppgrpc::add_client_reactor(&TestService::StubInterface::async_interface::ClientSide, stub_mock.get(), &ctx, subj.get_observable(), out_subj.get_observer());
         fakeit::Verify(Method(stub_mock, ClientSide)).Once();
 
         fakeit::Verify(Method(stream_mock, StartCall)).Once();

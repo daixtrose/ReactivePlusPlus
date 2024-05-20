@@ -44,33 +44,39 @@ namespace rppgrpc
     template<typename Async, rpp::constraint::observable Observable, rpp::constraint::observer Observer>
     using member_write_function_ptr = void (Async::*)(grpc::ClientContext*, rpp::utils::extract_observer_type_t<Observer>*, grpc::ClientWriteReactor<rpp::utils::extract_observable_type_t<Observable>>*);
 
+    template<rpp::constraint::observable Observable, rpp::constraint::observer Observer>
+    auto make_server_reactor(const Observable& responses, Observer&& requests);
+
+    template<rpp::constraint::observer Observer>
+    auto make_server_reactor(Observer&& requests);
+
     template<typename AsyncInMethod,
              std::derived_from<AsyncInMethod> Async,
              rpp::constraint::observable      Observable,
              rpp::constraint::observer        Observer>
-    void add_reactor(grpc::ClientContext*                                          context,
-                     Async&                                                        async,
-                     member_bidi_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                             requests,
-                     Observer&&                                                    responses);
+    void add_client_reactor(member_bidi_function_ptr<AsyncInMethod, Observable, Observer> method,
+                            Async&                                                        async,
+                            grpc::ClientContext*                                          context,
+                            const Observable&                                             requests,
+                            Observer&&                                                    responses);
 
     template<typename AsyncInMethod,
              std::derived_from<AsyncInMethod> Async,
              typename Request,
              rpp::constraint::observer Observer>
-    void add_reactor(grpc::ClientContext*                                       context,
-                     Async&                                                     async,
-                     const Request*                                             request,
-                     member_read_function_ptr<AsyncInMethod, Request, Observer> method,
-                     Observer&&                                                 responses);
+    void add_client_reactor(member_read_function_ptr<AsyncInMethod, Request, Observer> method,
+                            Async&                                                     async,
+                            grpc::ClientContext*                                       context,
+                            const Request*                                             request,
+                            Observer&&                                                 responses);
 
     template<typename AsyncInMethod,
              std::derived_from<AsyncInMethod> Async,
              rpp::constraint::observable      Observable,
              rpp::constraint::observer        Observer>
-    void add_reactor(grpc::ClientContext*                                           context,
-                     Async&                                                         async,
-                     member_write_function_ptr<AsyncInMethod, Observable, Observer> method,
-                     const Observable&                                              requests,
-                     Observer&&                                                     responses);
+    void add_client_reactor(member_write_function_ptr<AsyncInMethod, Observable, Observer> method,
+                            Async&                                                         async,
+                            grpc::ClientContext*                                           context,
+                            const Observable&                                              requests,
+                            Observer&&                                                     responses);
 } // namespace rppgrpc
