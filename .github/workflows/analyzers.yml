@@ -34,7 +34,7 @@ jobs:
     #       sudo apt-get install -y --allow-downgrades libstdc++-12-dev libstdc++6=12.* libgcc-s1=12.*
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         cache: true
 
@@ -42,7 +42,7 @@ jobs:
       uses: turtlebrowser/get-conan@main
 
     - name: cache deps
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
           path: |
             ~/.conan2
@@ -118,7 +118,7 @@ jobs:
       run: sudo apt-get update -q && sudo apt-get install llvm -q -y
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         cache: true
 
@@ -126,7 +126,7 @@ jobs:
       uses: turtlebrowser/get-conan@main
 
     - name: cache deps
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
           path: |
             ~/.conan2

@@ -14,6 +14,25 @@ macro(rpp_handle_3rdparty TARGET_NAME)
   set_target_properties(${TARGET_NAME} PROPERTIES FOLDER 3rdparty)
 endmacro()
 
+macro(rpp_fetch_library_extended NAME URL TAG TARGET_NAME)
+  Include(FetchContent)
+  set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build SHARED libraries")
+
+  FetchContent_Declare(
+    ${NAME}
+    GIT_REPOSITORY ${URL}
+    GIT_TAG        ${TAG}
+    GIT_SHALLOW TRUE
+  )
+
+  FetchContent_MakeAvailable(${NAME})
+  rpp_handle_3rdparty(${TARGET_NAME})
+endmacro()
+
+macro(rpp_fetch_library NAME URL TAG)
+  rpp_fetch_library_extended(${NAME} ${URL} ${TAG} ${NAME})
+endmacro()
+
 # ===================== SFML =======================
 if (RPP_BUILD_SFML_CODE AND RPP_BUILD_EXAMPLES)
     find_package(SFML COMPONENTS graphics system window REQUIRED)
@@ -80,25 +99,6 @@ if (RPP_BUILD_GRPC_CODE AND (RPP_BUILD_TESTS OR RPP_BUILD_EXAMPLES))
     set_target_properties(${TARGET} PROPERTIES CXX_CPPCHECK "")
   endmacro()
 endif()
-
-macro(rpp_fetch_library_extended NAME URL TAG TARGET_NAME)
-  Include(FetchContent)
-  set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build SHARED libraries")
-
-  FetchContent_Declare(
-    ${NAME}
-    GIT_REPOSITORY ${URL}
-    GIT_TAG        ${TAG}
-    GIT_SHALLOW TRUE
-  )
-
-  FetchContent_MakeAvailable(${NAME})
-  rpp_handle_3rdparty(${TARGET_NAME})
-endmacro()
-
-macro(rpp_fetch_library NAME URL TAG)
-  rpp_fetch_library_extended(${NAME} ${URL} ${TAG} ${NAME})
-endmacro()
 
 # ==================== RXCPP =======================
 if (RPP_BUILD_RXCPP AND RPP_BUILD_BENCHMARKS)
