@@ -18,6 +18,7 @@
 #include <rpp/operators/subscribe_on.hpp>
 #include <rpp/schedulers.hpp>
 #include <rpp/schedulers/test_scheduler.hpp>
+#include <rpp/sources/create.hpp>
 #include <rpp/sources/just.hpp>
 
 #include "rpp/disposables/fwd.hpp"
@@ -792,6 +793,8 @@ TEST_CASE("new_thread works till end")
 
     const auto vals = std::array{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
+    auto checked = std::make_shared<std::atomic_bool>();
+
     REQUIRE_CALL(*mock, on_next_lvalue(trompeloeil::_)).TIMES(10).IN_SEQUENCE(s);
 
     auto done = std::make_shared<std::atomic_bool>();
@@ -803,11 +806,20 @@ TEST_CASE("new_thread works till end")
                                                                })
                           .IN_SEQUENCE(s);
 
-    rpp::source::from_iterable(vals)
+    // gate emission outside of the mock: trompeloeil holds its global lock while running side effects
+    rpp::source::create<int>([checked, vals](const auto& obs) {
+        while (!checked->load())
+        {
+        };
+        for (const auto v : vals)
+            obs.on_next(v);
+        obs.on_completed();
+    })
         | rpp::operators::subscribe_on(rpp::schedulers::new_thread{})
         | rpp::operators::subscribe(mock);
 
     const bool before = last->is_satisfied();
+    checked->store(true);
 
     wait(last);
 
