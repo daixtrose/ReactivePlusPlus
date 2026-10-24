@@ -33,11 +33,13 @@ TEST_CASE("main_thread_scheduler schedules actions to main thread")
 
     SUBCASE("submitting action to main scheduler from another thread")
     {
-        QTimer::singleShot(10, &application, [&] { application.exit(); });
+        // exit on completion instead of a fixed deadline: slow setup could let the deadline expire before the action runs
+        QTimer::singleShot(std::chrono::seconds{5}, &application, [&] { application.exit(); });
         std::promise<std::thread::id> execution_thread{};
         std::thread{[&] {
             rppqt::schedulers::main_thread_scheduler::create_worker().schedule([&](const auto&) -> rpp::schedulers::optional_delay_from_now {
                 execution_thread.set_value(std::this_thread::get_id());
+                application.exit();
                 return {};
             },
                                                                                observer);
