@@ -808,7 +808,9 @@ TEST_CASE("new_thread works till end")
 
     // gate emission outside of the mock: trompeloeil holds its global lock while running side effects
     rpp::source::create<int>([checked, vals](const auto& obs) {
-        checked->wait(false);
+        while (!checked->load())
+        {
+        };
         for (const auto v : vals)
             obs.on_next(v);
         obs.on_completed();
@@ -818,7 +820,6 @@ TEST_CASE("new_thread works till end")
 
     const bool before = last->is_satisfied();
     checked->store(true);
-    checked->notify_all();
 
     wait(last);
 
